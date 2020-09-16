@@ -7,7 +7,8 @@ output:
    keep_md: TRUE
 ---
 
-```{r setup, include=TRUE}
+
+```r
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -38,10 +39,25 @@ The following code deals with Setting the working directory where the zip file
 has been saved followed by reading the data in and formatting the date 
 correctly.
 
-```{r read data}
+
+```r
 setwd("C:/Users/sally/Desktop/Coursera/5. Reproducible Research/Week 2 assign")
 actdata<-read.csv("activity.csv", header=TRUE, sep=",", na.strings = "NA")
 library(lubridate)
+```
+
+```
+## 
+## Attaching package: 'lubridate'
+```
+
+```
+## The following objects are masked from 'package:base':
+## 
+##     date, intersect, setdiff, union
+```
+
+```r
 actdata$date<-ymd(actdata$date)
 ```
 ### The total mean number of steps taken per day
@@ -49,23 +65,66 @@ actdata$date<-ymd(actdata$date)
 The step data has been grouped by date and a histogram of the total mean steps
 taken per day is shown in Figure 1 below.
 
-```{r plot 1}
+
+```r
  library(dplyr)
+```
+
+```
+## 
+## Attaching package: 'dplyr'
+```
+
+```
+## The following objects are masked from 'package:stats':
+## 
+##     filter, lag
+```
+
+```
+## The following objects are masked from 'package:base':
+## 
+##     intersect, setdiff, setequal, union
+```
+
+```r
 actdataPD<-actdata %>%
     group_by(date) %>%
     summarise(totsteps = sum(steps))
-hist(actdataPD$totsteps, xlab="Total steps per day", main="Figure 1 - 
-       Histogram of total steps taken each day over a two month period")
+```
 
 ```
+## `summarise()` ungrouping output (override with `.groups` argument)
+```
+
+```r
+hist(actdataPD$totsteps, xlab="Total steps per day", main="Figure 1 - 
+       Histogram of total steps taken each day over a two month period")
+```
+
+![](PA1_template_files/figure-html/plot 1-1.png)<!-- -->
 
 
 The mean and median of the daily step data is shown here:
-```{r mean and median info, results = "asis"}
+
+```r
 library(xtable)
 t1<-xtable(summary(actdataPD))
 print(t1, type = "html")
 ```
+
+<!-- html table generated in R 4.0.2 by xtable 1.8-4 package -->
+<!-- Wed Sep 16 13:26:34 2020 -->
+<table border=1>
+<tr> <th>  </th> <th>      date </th> <th>    totsteps </th>  </tr>
+  <tr> <td align="right"> X </td> <td> Min.   :2012-10-01   </td> <td> Min.   :   41   </td> </tr>
+  <tr> <td align="right"> X.1 </td> <td> 1st Qu.:2012-10-16   </td> <td> 1st Qu.: 8841   </td> </tr>
+  <tr> <td align="right"> X.2 </td> <td> Median :2012-10-31   </td> <td> Median :10765   </td> </tr>
+  <tr> <td align="right"> X.3 </td> <td> Mean   :2012-10-31   </td> <td> Mean   :10766   </td> </tr>
+  <tr> <td align="right"> X.4 </td> <td> 3rd Qu.:2012-11-15   </td> <td> 3rd Qu.:13294   </td> </tr>
+  <tr> <td align="right"> X.5 </td> <td> Max.   :2012-11-30   </td> <td> Max.   :21194   </td> </tr>
+  <tr> <td align="right"> X.6 </td> <td>  </td> <td> NA's   :8   </td> </tr>
+   </table>
 
 
 
@@ -74,74 +133,130 @@ print(t1, type = "html")
 Figure 2 below shows the average number of steps taken per 5-minute interval 
 across a 24 hour period. Data recorded as NA has been excluded from this plot.
 
-```{r plot 2}
+
+```r
 actdataPI<-actdata %>%
      group_by(interval) %>%
      summarise(intave=mean(steps, na.rm=TRUE))
-  
+```
+
+```
+## `summarise()` ungrouping output (override with `.groups` argument)
+```
+
+```r
 plot(actdataPI$interval, actdataPI$intave, type="l", 
   xlab = "5 minute interval over a 24 hour period", 
   ylab = "Average number of steps", 
   main = "Figure 2 - Steps averaged over 5 minute intervals")
 ```
 
+![](PA1_template_files/figure-html/plot 2-1.png)<!-- -->
 
-```{r peak activity interval}
+
+
+```r
  maxint<-filter(actdataPI, intave>200)
   maxint
 ```
 
+```
+## # A tibble: 1 x 2
+##   interval intave
+##      <int>  <dbl>
+## 1      835   206.
+```
+
 There is a clear peak in the data around the 800 interval, 
-more precisely interval `r round(maxint, 0)` steps.
+more precisely interval 835, 206 steps.
 
 ### Inputting missing values
 
 
-```{r missing values calc}
+
+```r
 nas<-sum(is.na(actdata$steps))
 pnas<-nrow(actdata[!complete.cases(actdata), ])/nrow(actdata)*100
 ```
  
-There are a total of `r nas` NA values (or missing step readings), 
-which amounts to `r round(pnas,2)`% of the data. 
+There are a total of 2304 NA values (or missing step readings), 
+which amounts to 13.11% of the data. 
 
 
 The NA values are replaced by the interval average that was calculated in the 
 previous step in order to see if there is an impact on the mean and median of 
 the data
 
-```{r missing values}
+
+```r
 actdataM<-merge(actdata, actdataPI, by="interval")
 actdataAve<-transform(actdataM, Nsteps = ifelse(is.na(steps), intave, steps))
 ```
 Figure 3 below shows the histogram with missing values replaced with interval 
 averages
 
-```{r plot 3}
+
+```r
 actdataAvePD<-actdataAve %>%
      group_by(date) %>%
      summarise(totsteps=sum(Nsteps))
+```
+
+```
+## `summarise()` ungrouping output (override with `.groups` argument)
+```
+
+```r
 hist(actdataAvePD$totsteps, xlab="Total steps per day", main="Figure 3 - 
        Histogram of total steps taken each day over a two month period 
      (missing values replaced)")
 ```
 
+![](PA1_template_files/figure-html/plot 3-1.png)<!-- -->
+
 
 And the recalculated mean and median are given in the summary below:
 
-```{r mean and median updated, results = "asis"}
+
+```r
 t2<-xtable(summary(actdataAvePD))
 print(t2, type="html")
 ```
+
+<!-- html table generated in R 4.0.2 by xtable 1.8-4 package -->
+<!-- Wed Sep 16 13:26:35 2020 -->
+<table border=1>
+<tr> <th>  </th> <th>      date </th> <th>    totsteps </th>  </tr>
+  <tr> <td align="right"> X </td> <td> Min.   :2012-10-01   </td> <td> Min.   :   41   </td> </tr>
+  <tr> <td align="right"> X.1 </td> <td> 1st Qu.:2012-10-16   </td> <td> 1st Qu.: 9819   </td> </tr>
+  <tr> <td align="right"> X.2 </td> <td> Median :2012-10-31   </td> <td> Median :10766   </td> </tr>
+  <tr> <td align="right"> X.3 </td> <td> Mean   :2012-10-31   </td> <td> Mean   :10766   </td> </tr>
+  <tr> <td align="right"> X.4 </td> <td> 3rd Qu.:2012-11-15   </td> <td> 3rd Qu.:12811   </td> </tr>
+  <tr> <td align="right"> X.5 </td> <td> Max.   :2012-11-30   </td> <td> Max.   :21194   </td> </tr>
+   </table>
 
 
 
 In order to see if the missing values have had an impact on the data the 
 previous
 summary information which includes the NA values is given below:
-```{r previous summary, results = "asis"}
+
+```r
 print(t1, type="html")
 ```
+
+<!-- html table generated in R 4.0.2 by xtable 1.8-4 package -->
+<!-- Wed Sep 16 13:26:35 2020 -->
+<table border=1>
+<tr> <th>  </th> <th>      date </th> <th>    totsteps </th>  </tr>
+  <tr> <td align="right"> X </td> <td> Min.   :2012-10-01   </td> <td> Min.   :   41   </td> </tr>
+  <tr> <td align="right"> X.1 </td> <td> 1st Qu.:2012-10-16   </td> <td> 1st Qu.: 8841   </td> </tr>
+  <tr> <td align="right"> X.2 </td> <td> Median :2012-10-31   </td> <td> Median :10765   </td> </tr>
+  <tr> <td align="right"> X.3 </td> <td> Mean   :2012-10-31   </td> <td> Mean   :10766   </td> </tr>
+  <tr> <td align="right"> X.4 </td> <td> 3rd Qu.:2012-11-15   </td> <td> 3rd Qu.:13294   </td> </tr>
+  <tr> <td align="right"> X.5 </td> <td> Max.   :2012-11-30   </td> <td> Max.   :21194   </td> </tr>
+  <tr> <td align="right"> X.6 </td> <td>  </td> <td> NA's   :8   </td> </tr>
+   </table>
 
 
 
@@ -154,7 +269,8 @@ method chosen to replace the NA values was suitable.
 The dataset with that has had the NA values replaced was used in this analysis.
 The data was labelled according to the day of week it was, which was then
 simplified to either "weekday" or "weekend".
-```{r week and weekend data}
+
+```r
 actdataAve$day<-weekdays(actdataAve$date, abbreviate=TRUE)
 actdataAve$W<-ifelse(actdataAve$day %in% c("Mon","Tue","Wed","Thu","Fri"), 
                      "Week", "Weekend")
@@ -164,16 +280,30 @@ This data was subsetted according to which category it fell into in order
 to access any differences in activity between the week days and the weekends. 
 
 The results are shown in Figure 4
-```{r plot 4}
+
+```r
 actdataWeek<-subset(actdataAve, W=="Week")
 actdataWeekend<-subset(actdataAve, W=="Weekend")
 actdataWeekA<-actdataWeek %>%
      group_by(interval) %>%
      summarise(intave=mean(Nsteps))
+```
+
+```
+## `summarise()` ungrouping output (override with `.groups` argument)
+```
+
+```r
 actdataWeekendA<-actdataWeekend %>%
      group_by(interval) %>%
      summarise(intave=mean(Nsteps))
+```
 
+```
+## `summarise()` ungrouping output (override with `.groups` argument)
+```
+
+```r
 par(mfrow=c(2,1), mar = c(4, 2, 1, 2), oma=c(0, 0, 1, 0))
 plot5<-plot(actdataWeekA$interval, actdataWeekA$intave, type="l", main= 
           "Figure 4a - Week activity data", xlab="", ylab="Average steps",
@@ -182,6 +312,8 @@ plot6<-plot(actdataWeekendA$interval, actdataWeekendA$intave, type="l",
             main="Figure 4b - Weekend activity data", xlab="5 minute interval", 
             ylab="Average steps", ylim=c(0,225))
 ```
+
+![](PA1_template_files/figure-html/plot 4-1.png)<!-- -->
 
 
 
